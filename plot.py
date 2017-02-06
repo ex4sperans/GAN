@@ -1,30 +1,23 @@
 import random
 import os
+import json
 
 import numpy as np 
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 
 from gan import GAN
 
+with open('model_params.json', 'r') as f:
+    model_params = json.load(f)
 
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-
-###############################################################################
-
-input_dim = 28*28
-z_dim = 64
-load_path = 'models/mnist_gan/m'
-
-###############################################################################
+load_path = model_params['model_path']
 
 model = GAN(
-            input_dim=input_dim,
-            latent_dim=z_dim,
-            generator_architechture=[512],
-            discriminator_architechture=[512],
-            scope='GAN',
+            input_dim=model_params['input_dim'],
+            latent_dim=model_params['latent_dim'],
+            generator_architechture=model_params['generator_architechture'],
+            discriminator_architechture=model_params['discriminator_architechture'],
+            scope=model_params['scope'],
             mode='inference')
 
 model.load_model(load_path)
@@ -46,7 +39,6 @@ def sample():
     fig.savefig('pics/sample_from_latent_space.png')
     plt.close()
     print('Sample saved.')
-
     
 if __name__ == '__main__':
 
