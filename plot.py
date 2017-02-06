@@ -14,7 +14,7 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 ###############################################################################
 
 input_dim = 28*28
-z_dim = 32
+z_dim = 64
 load_path = 'models/mnist_gan/m'
 
 ###############################################################################
@@ -22,10 +22,9 @@ load_path = 'models/mnist_gan/m'
 model = GAN(
             input_dim=input_dim,
             latent_dim=z_dim,
-            generator_architechture=[64, 128],
-            discriminator_architechture=[128, 64],
+            generator_architechture=[512],
+            discriminator_architechture=[512],
             scope='GAN',
-            num_samples=1,
             mode='inference')
 
 model.load_model(load_path)
@@ -35,17 +34,16 @@ def to_image(x):
 
 def sample():
 
-    fig = plt.figure(figsize=(7, 7))
-    for i in range(225):
-        ax = fig.add_subplot(15, 15, i+1)
-        x = model.sample()
+    fig = plt.figure(figsize=(4, 4))
+    for i, x in enumerate(model.sample(100)):
+        ax = fig.add_subplot(10, 10, i+1) 
         ax.imshow(to_image(x), cmap='gray', aspect='auto')
         ax.set_axis_off()
 
     #remove spacings between subplots
-    fig.subplots_adjust(hspace=0, wspace=0)
+    fig.subplots_adjust(hspace=0, wspace=0, left=0, bottom=0, right=1, top=1)
     os.makedirs('pics', exist_ok=True)
-    fig.savefig('pics/sample_from_latent_space.png', tight_layout=True)
+    fig.savefig('pics/sample_from_latent_space.png')
     plt.close()
     print('Sample saved.')
 
