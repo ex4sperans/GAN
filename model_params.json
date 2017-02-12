@@ -1,8 +1,21 @@
 {
-    "input_dim": 784,
-    "latent_dim": 32,
-    "discriminator_architechture": [512],
-    "generator_architechture": [512],
-    "model_path": "model_path/mnist_gan/m",
-    "scope": "GAN"
+    "GAN":
+    {
+        "input_dim": 784,
+        "latent_dim": 32,
+        "discriminator_architechture": [512],
+        "generator_architechture": [512],
+        "model_path": "saved_models/mnist_gan/m",
+        "scope": "GAN"
+    },
+
+    "WGAN":
+    {
+        "input_dim": 784,
+        "latent_dim": 64,
+        "discriminator_architechture": [512],
+        "generator_architechture": [512],
+        "model_path": "saved_models/mnist_wgan/m",
+        "scope": "WGAN"
+    }
 }

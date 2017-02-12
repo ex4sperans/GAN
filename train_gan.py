@@ -2,7 +2,11 @@ import argparse
 import os
 import json
 
-from gan import GAN
+from gan import GAN, WGAN
+
+models = {
+          'GAN': GAN,
+          'WGAN': WGAN}
 
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
@@ -14,33 +18,39 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
                     '--batch_size',  type=int,
-                        default=32, help='batch size')
+                        default=64, help='batch size')
 parser.add_argument(
                     '--num_epochs', type=int,
                         default=1000, help='maximum number of training epochs')
 parser.add_argument(
                     '--learning_rate', type=float,
                         default=0.001, help='learning rate')
+parser.add_argument(
+                    '--model', type=str, required=True,
+                        choices=list(models.keys()), help='model type')
 
 load_parser = parser.add_mutually_exclusive_group(required=False)
-load_parser.add_argument('--restore', dest='restore', action='store_false')
+load_parser.add_argument('--restore', dest='restore', action='store_true')
 parser.set_defaults(restore=False)
 
 args = parser.parse_args()
 
 with open('model_params.json', 'r') as f:
-    model_params = json.load(f)
+    model_params = json.load(f)[args.model]
+
+kwargs = dict(
+              input_dim=model_params['input_dim'],
+              latent_dim=model_params['latent_dim'],
+              generator_architechture=model_params['generator_architechture'],
+              discriminator_architechture=model_params['discriminator_architechture'],
+              scope=model_params['scope'],
+              mode='train')    
+
+model = models[args.model]
+model = model(**kwargs)
 
 save_path = model_params['model_path']
 os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-model = GAN(
-            input_dim=model_params['input_dim'],
-            latent_dim=model_params['latent_dim'],
-            generator_architechture=model_params['generator_architechture'],
-            discriminator_architechture=model_params['discriminator_architechture'],
-            scope=model_params['scope'],
-            mode='train')
 
 if args.restore:
       model.load_model(save_path)
@@ -50,6 +60,8 @@ print('Latent dim: {}'.format(model_params['latent_dim']))
 print('Generator architechture: {}'.format(model.generator_architechture))
 print('Discriminator architechture: {}'.format(model.discriminator_architechture))
 print('Learning rate: {}'.format(args.learning_rate))
+print('Minibatch size: {}'.format(args.batch_size))
+print('Number of epochs: {}'.format(args.num_epochs))
 
 for epoch in range(1, args.num_epochs + 1):
 

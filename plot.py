@@ -1,25 +1,39 @@
-import random
 import os
 import json
+import argparse
 
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from gan import GAN
+from gan import GAN, WGAN
+
+models = {
+          'GAN': GAN,
+          'WGAN': WGAN}
+
+parser = argparse.ArgumentParser(
+                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+parser.add_argument(
+                    '--model', type=str, required=True,
+                        choices=list(models.keys()), help='model type')
+args = parser.parse_args()
 
 with open('model_params.json', 'r') as f:
-    model_params = json.load(f)
+    model_params = json.load(f)[args.model]
+
+kwargs = dict(
+              input_dim=model_params['input_dim'],
+              latent_dim=model_params['latent_dim'],
+              generator_architechture=model_params['generator_architechture'],
+              discriminator_architechture=model_params['discriminator_architechture'],
+              scope=model_params['scope'],
+              mode='inference')    
+
+model = models[args.model]
+model = model(**kwargs)
 
 load_path = model_params['model_path']
-
-model = GAN(
-            input_dim=model_params['input_dim'],
-            latent_dim=model_params['latent_dim'],
-            generator_architechture=model_params['generator_architechture'],
-            discriminator_architechture=model_params['discriminator_architechture'],
-            scope=model_params['scope'],
-            mode='inference')
-
 model.load_model(load_path)
 
 def to_image(x):
@@ -36,7 +50,7 @@ def sample():
     #remove spacings between subplots
     fig.subplots_adjust(hspace=0, wspace=0, left=0, bottom=0, right=1, top=1)
     os.makedirs('pics', exist_ok=True)
-    fig.savefig('pics/sample_from_latent_space.png')
+    fig.savefig('pics/sample_{}.png'.format(model.scope))
     plt.close()
     print('Sample saved.')
     
