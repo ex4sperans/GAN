@@ -35,14 +35,14 @@ class GAN():
                                                 loss=self.generator_loss,
                                                 vars_=self.generator_vars,
                                                 opt_scope='generator',
-                                                clip=1)
+                                                clip=None)
             self._init_optimizer('generator')
 
             self.train_discriminator = self._create_optimizer(
                                                 loss=self.discriminator_loss,
                                                 vars_=self.discriminator_vars,
                                                 opt_scope='discriminator',
-                                                clip=1)
+                                                clip=None)
             self._init_optimizer('discriminator')
 
     def _discriminate(self, x):
@@ -220,6 +220,7 @@ class WGAN(GAN):
                                        layer_size,
                                        self.activation,
                                        scope='layer{}'.format(i+1))
+            net = tf.nn.dropout(net, 0.9)
 
         d = slim.fully_connected(
                                  net,
@@ -252,7 +253,7 @@ class WGAN(GAN):
             
             self.sess.run(self.train_discriminator, discriminator_feed)
             #according to the paper
-            if step % 10 == 0:
+            if step % 5 == 0:
                 self.sess.run(self.train_generator, generator_feed)
             #crop weights to speed up discriminator convergence
             self.sess.run(self.clip_weights)
