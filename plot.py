@@ -5,11 +5,12 @@ import argparse
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from gan import GAN, WGAN
+from gan import GAN, WGAN, DCGAN
 
 models = {
           'GAN': GAN,
-          'WGAN': WGAN}
+          'WGAN': WGAN,
+          'DCGAN': DCGAN}
 
 parser = argparse.ArgumentParser(
                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -28,7 +29,11 @@ kwargs = dict(
               generator_architechture=model_params['generator_architechture'],
               discriminator_architechture=model_params['discriminator_architechture'],
               scope=model_params['scope'],
-              mode='inference')    
+              mode='inference') 
+
+if args.model == 'DCGAN':
+    kwargs['reshaped_z_shape'] = model_params['reshaped_z_shape']
+    kwargs['reshaped_x_shape'] = model_params['reshaped_x_shape']   
 
 model = models[args.model]
 model = model(**kwargs)
@@ -44,7 +49,7 @@ def sample():
     fig = plt.figure(figsize=(4, 4))
     for i, x in enumerate(model.sample(100)):
         ax = fig.add_subplot(10, 10, i+1) 
-        ax.imshow(to_image(x), cmap='gray', aspect='auto')
+        ax.imshow(to_image(x), cmap='gray', aspect='auto', interpolation='bicubic')
         ax.set_axis_off()
 
     #remove spacings between subplots

@@ -2,11 +2,12 @@ import argparse
 import os
 import json
 
-from gan import GAN, WGAN
+from gan import GAN, WGAN, DCGAN
 
 models = {
           'GAN': GAN,
-          'WGAN': WGAN}
+          'WGAN': WGAN,
+          'DCGAN': DCGAN}
 
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
@@ -44,7 +45,11 @@ kwargs = dict(
               generator_architechture=model_params['generator_architechture'],
               discriminator_architechture=model_params['discriminator_architechture'],
               scope=model_params['scope'],
-              mode='train')    
+              mode='train')
+
+if args.model == 'DCGAN':
+    kwargs['reshaped_z_shape'] = model_params['reshaped_z_shape']
+    kwargs['reshaped_x_shape'] = model_params['reshaped_x_shape']
 
 model = models[args.model]
 model = model(**kwargs)

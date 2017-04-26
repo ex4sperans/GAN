@@ -1,7 +1,12 @@
+import random
+
+import numpy as np
+
 import tensorflow as tf
 from tensorflow.contrib import slim
 
 class GAN():
+
     """A class representing Generative Adversarial Network"""
 
     def __init__(self, input_dim, latent_dim, scope,
@@ -88,6 +93,7 @@ class GAN():
         self.inputs = tf.placeholder(tf.float32, shape=[None, self.input_dim])
         self.learning_rate = tf.placeholder(tf.float32, [])
         self.num_samples = tf.placeholder(tf.int32, [])
+        self.is_training = tf.placeholder(tf.bool, ())
 
     def _build_graph(self):
 
@@ -118,7 +124,7 @@ class GAN():
         with tf.variable_scope('Optimizer_' + opt_scope + '_' + self.scope):
             optimizer = tf.train.RMSPropOptimizer(
                                         learning_rate=self.learning_rate,
-                                        momentum=0,
+                                        momentum=0.9,
                                         decay=0.9)
             grads_and_vars = optimizer.compute_gradients(
                                                          loss=loss,
@@ -134,6 +140,15 @@ class GAN():
         self._init_vars(opt_vars)
         print('\nInitialized optimizer for {}`s {}.'.format(self.scope, opt_scope))
 
+    def _batch_norm(self, x, scope):
+
+        return slim.batch_norm(
+                               x,
+                               scale=True,
+                               updates_collections=None,
+                               scope=scope,
+                               is_training=self.is_training)
+
     def train(self, train_data, learning_rate, batch_size, num_samples):
 
         for _ in range(train_data.num_examples//batch_size):
@@ -142,21 +157,24 @@ class GAN():
             discriminator_feed = {
                                   self.inputs: batch,
                                   self.learning_rate: learning_rate,
-                                  self.num_samples: num_samples}
+                                  self.num_samples: num_samples,
+                                  self.is_training: True}
             generator_feed = {
                               self.learning_rate: learning_rate,
-                              self.num_samples: num_samples}
+                              self.num_samples: num_samples,
+                              self.is_training: True}
 
             self.sess.run(self.train_discriminator, feed_dict=discriminator_feed)
             self.sess.run(self.train_generator, feed_dict=generator_feed)
 
     def predict(self, validation_data):
 
-        batch = validation_data.images
+        batch = random.sample(list(validation_data.images), 100)
         fetches = [self.discriminator_loss, self.generator_loss]
         feed_dict = {
                      self.inputs: batch,
-                     self.num_samples: validation_data.num_examples}
+                     self.num_samples: 100,
+                     self.is_training: False}
         dl, gl = self.sess.run(fetches, feed_dict=feed_dict)        
         print(' Discriminator loss: {}, Generator loss: {}'.format(dl, gl))
 
@@ -196,10 +214,13 @@ class GAN():
         return list(v for v in vars_ if v.name.startswith(scope))
 
     def sample(self, num_samples):
-        return self.sess.run(self.sampled, {self.num_samples: num_samples})
-
+        feed_dict = {self.num_samples: num_samples, self.is_training: False}
+        return self.sess.run(self.sampled, feed_dict)
 
 class WGAN(GAN):
+
+    """A class representing Generative Adversarial Network
+    with Wasserstein distance as loss function"""
 
     def __init__(self, input_dim, latent_dim, scope,
                  generator_architechture, discriminator_architechture,
@@ -230,7 +251,7 @@ class WGAN(GAN):
         return d 
 
     def _create_loss(self):
-        #Wasserstein distance
+        # Wasserstein distance
         self.discriminator_loss = tf.reduce_mean(self.data_d) - tf.reduce_mean(self.model_d)
         self.generator_loss = tf.reduce_mean(self.model_d)
 
@@ -246,14 +267,96 @@ class WGAN(GAN):
             discriminator_feed = {
                                   self.inputs: batch,
                                   self.learning_rate: learning_rate,
-                                  self.num_samples: num_samples}
+                                  self.num_samples: num_samples,
+                                  self.is_training: True}
             generator_feed = {
                               self.learning_rate: learning_rate,
                               self.num_samples: num_samples}
             
             self.sess.run(self.train_discriminator, discriminator_feed)
-            #according to the paper
+            # according to the paper
             if step % 5 == 0:
                 self.sess.run(self.train_generator, generator_feed)
-            #crop weights to speed up discriminator convergence
+            # crop weights to speed up discriminator convergence
             self.sess.run(self.clip_weights)
+
+class DCGAN(GAN):
+
+    """A class representing Deep Convolutional Generative Adversarial Network"""
+
+    def __init__(self, input_dim, latent_dim, reshaped_z_shape, reshaped_x_shape,
+                 scope, generator_architechture, discriminator_architechture,
+                 mode='train'):
+
+        self.reshaped_z_shape = reshaped_z_shape
+        self.reshaped_x_shape = reshaped_x_shape
+        super(DCGAN, self).__init__(input_dim, latent_dim, scope,
+            generator_architechture, discriminator_architechture, mode)
+        self.activation = tf.nn.relu
+
+    def _leaky_relu(self, x, a):
+        return tf.nn.relu(x) - a*tf.nn.relu(-x)
+
+    def _discriminate(self, x):
+
+        net = x
+        # reshape x to be in form of an image
+        net = tf.reshape(x, [-1] + self.reshaped_x_shape)
+        net = self._batch_norm(net, 'input')
+
+        for i, layer_params in enumerate(self.discriminator_architechture):
+
+            depth = layer_params['depth']
+            stride = layer_params['stride']
+
+            net = slim.conv2d(
+                              net,
+                              depth,
+                              stride=stride,
+                              kernel_size=[3, 3],
+                              activation_fn=None,
+                              scope='layer{}'.format(i+1))
+
+            net = self._batch_norm(net, scope='batch_norm{}'.format(i+1))
+            net = self._leaky_relu(net, 0.2)
+        net = slim.flatten(net)
+
+        d = slim.fully_connected(
+                                 net,
+                                 1,
+                                 tf.nn.sigmoid,
+                                 scope='layer_out')
+        return d 
+
+    def _generate(self):
+
+        z = self._gaussian_sample()
+        net = z
+        # project and reshape
+        net = slim.fully_connected(
+                                   net,
+                                   int(np.prod(self.reshaped_z_shape)),
+                                   activation_fn=None)
+        net = tf.reshape(net, [-1] + self.reshaped_z_shape)
+        net = self._batch_norm(net, 'input')
+
+        for i, layer_params in enumerate(self.generator_architechture):
+
+            stride = layer_params['stride']
+            depth = layer_params['depth']
+
+            net = slim.conv2d_transpose(
+                                        net,
+                                        depth,
+                                        kernel_size=[3, 3],
+                                        stride=stride,
+                                        activation_fn=None,
+                                        scope='layer{}'.format(i+1))
+
+            net = self._batch_norm(net, scope='batch_norm{}'.format(i+1))
+            net = self.activation(net)
+
+        net = slim.flatten(net)
+        sample = tf.nn.sigmoid(net)
+
+        return sample

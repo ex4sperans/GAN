@@ -17,5 +17,54 @@
         "generator_architechture": [512],
         "model_path": "saved_models/mnist_wgan/m",
         "scope": "WGAN"
+    },
+
+    "DCGAN":
+    {
+        "input_dim": 784,
+        "latent_dim": 64,
+        "reshaped_z_shape": [7, 7, 128],
+        "reshaped_x_shape": [28, 28, 1],
+        "discriminator_architechture": 
+                                    [
+                                        {
+                                            "depth": 64,
+                                            "stride": 2
+                                        },
+                            
+                                        {
+                                            "depth": 128,
+                                            "stride": 2
+                                        },
+
+                                        {
+                                            "depth": 128,
+                                            "stride": 1
+                                        },
+
+                                        {
+                                            "depth": 128,
+                                            "stride": 1
+                                        }
+                                    ],
+        "generator_architechture": 
+                                    [
+                                        {
+                                            "depth": 128,
+                                            "stride": 1
+                                        },
+
+                                        {
+                                            "depth": 64,
+                                            "stride": 2
+                                        },
+
+                                        {
+                                            "depth": 1,
+                                            "stride": 2
+                                        }
+                                    ],
+        "model_path": "saved_models/mnist_dcgan/m",
+        "scope": "DCGAN"  
     }
 }
