@@ -2,7 +2,9 @@ import argparse
 import os
 import json
 
-from gan import GAN, WGAN, DCGAN
+from models.gan import GAN
+from models.wgan import WGAN
+from models.dcgan import DCGAN
 
 models = {
           'GAN': GAN,
