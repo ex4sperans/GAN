@@ -3,8 +3,8 @@
     {
         "input_dim": 784,
         "latent_dim": 32,
-        "discriminator_architechture": [512],
-        "generator_architechture": [512],
+        "discriminator_architechture": [256, 256],
+        "generator_architechture": [256, 256],
         "model_path": "saved_models/mnist_gan/m",
         "scope": "GAN"
     },
@@ -12,9 +12,9 @@
     "WGAN":
     {
         "input_dim": 784,
-        "latent_dim": 64,
-        "discriminator_architechture": [512],
-        "generator_architechture": [512],
+        "latent_dim": 32,
+        "discriminator_architechture": [256, 256],
+        "generator_architechture": [256, 256],
         "model_path": "saved_models/mnist_wgan/m",
         "scope": "WGAN"
     },
@@ -22,46 +22,54 @@
     "DCGAN":
     {
         "input_dim": 784,
-        "latent_dim": 64,
-        "reshaped_z_shape": [7, 7, 128],
+        "latent_dim": 32,
+        "reshaped_z_shape": [7, 7, 64],
         "reshaped_x_shape": [28, 28, 1],
         "discriminator_architechture": 
                                     [
                                         {
+                                            "depth": 32,
+                                            "stride": 1,
+                                            "padding": "VALID",
+                                            "kernel_size": 5
+                                        },
+
+                                        {
                                             "depth": 64,
-                                            "stride": 2
-                                        },
-                            
-                                        {
-                                            "depth": 128,
-                                            "stride": 2
+                                            "stride": 2,
+                                            "padding": "VALID",
+                                            "kernel_size": 5
                                         },
 
                                         {
                                             "depth": 128,
-                                            "stride": 1
-                                        },
-
-                                        {
-                                            "depth": 128,
-                                            "stride": 1
+                                            "stride": 2,
+                                            "padding": "VALID",
+                                            "kernel_size": 5
                                         }
                                     ],
         "generator_architechture": 
                                     [
-                                        {
-                                            "depth": 128,
-                                            "stride": 1
-                                        },
 
                                         {
                                             "depth": 64,
-                                            "stride": 2
+                                            "stride": 1,
+                                            "padding": "SAME",
+                                            "kernel_size": 5
+                                        },
+
+                                        {
+                                            "depth": 32,
+                                            "stride": 2,
+                                            "padding": "SAME",
+                                            "kernel_size": 5
                                         },
 
                                         {
                                             "depth": 1,
-                                            "stride": 2
+                                            "stride": 2,
+                                            "padding": "SAME",
+                                            "kernel_size": 5
                                         }
                                     ],
         "model_path": "saved_models/mnist_dcgan/m",

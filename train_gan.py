@@ -6,6 +6,8 @@ from models.gan import GAN
 from models.wgan import WGAN
 from models.dcgan import DCGAN
 
+from plot import sample
+
 models = {
           'GAN': GAN,
           'WGAN': WGAN,
@@ -24,10 +26,10 @@ parser.add_argument(
                         default=64, help='batch size')
 parser.add_argument(
                     '--num_epochs', type=int,
-                        default=1000, help='maximum number of training epochs')
+                        default=100, help='maximum number of training epochs')
 parser.add_argument(
                     '--learning_rate', type=float,
-                        default=0.001, help='learning rate')
+                        default=0.0005, help='learning rate')
 parser.add_argument(
                     '--model', type=str, required=True,
                         choices=list(models.keys()), help='model type')
@@ -72,7 +74,8 @@ print('Number of epochs: {}'.format(args.num_epochs))
 
 for epoch in range(1, args.num_epochs + 1):
 
-    print('\n', '-'*30, 'Epoch {}'.format(epoch), '-'*30, '\n')
+    print('\n' + '-'*30, 'Epoch {}'.format(epoch), '-'*30, '\n')
     model.train(train_set, args.learning_rate, args.batch_size, args.batch_size)
     model.predict(valid_set)
     model.save_model(save_path)
+    sample(model, epoch)

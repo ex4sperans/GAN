@@ -13,8 +13,8 @@ class WGAN(GAN):
                  mode='train'):
 
         super(WGAN, self).__init__(input_dim, latent_dim, scope,
-            generator_architechture, discriminator_architechture, mode)
-        self.activation = tf.nn.relu
+            generator_architechture, discriminator_architechture, 
+            mode=mode, activation=tf.nn.relu)
 
         self._create_clip_op()
 
