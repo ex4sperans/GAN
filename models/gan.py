@@ -202,11 +202,13 @@ class GAN():
             print(v.name)
 
     def _get_vars_by_scope(self, scope, only_trainable=False):
+
         if only_trainable:
             vars_ = tf.trainable_variables()
         else:
             vars_ = tf.global_variables()
 
+        # filter graph variables by prefix `scope`
         return list(v for v in vars_ if v.name.startswith(scope))
 
     def sample(self, num_samples):

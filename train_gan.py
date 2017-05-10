@@ -8,6 +8,7 @@ from models.dcgan import DCGAN
 
 from plot import sample
 
+# mapping from model names to the corresponding classes
 models = {
           'GAN': GAN,
           'WGAN': WGAN,
@@ -16,7 +17,7 @@ models = {
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 train_set = mnist.train
-valid_set = mnist.train
+valid_set = mnist.validation
 
 parser = argparse.ArgumentParser(
                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -40,6 +41,7 @@ parser.set_defaults(restore=False)
 
 args = parser.parse_args()
 
+# all the parameters are contained in the JSON file, so load them
 with open('model_params.json', 'r') as f:
     model_params = json.load(f)[args.model]
 

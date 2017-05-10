@@ -68,7 +68,7 @@ class DCGAN(GAN):
                                    int(np.prod(self.reshaped_z_shape)),
                                    activation_fn=None)
         net = tf.reshape(net, [-1] + self.reshaped_z_shape)
-        #net = self._batch_norm(net, 'input')
+        net = self._batch_norm(net, 'input')
 
         initializer = tf.random_normal_initializer(stddev=0.02)
 
@@ -103,6 +103,7 @@ class DCGAN(GAN):
     def _create_optimizer(self, vars_, loss, opt_scope, clip=None):
 
         with tf.variable_scope('Optimizer_' + opt_scope + '_' + self.scope):
+            # according to the paper
             optimizer = tf.train.AdamOptimizer(
                                         learning_rate=self.learning_rate,
                                         beta1=0.5)
